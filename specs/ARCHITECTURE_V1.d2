@@ -1,0 +1,49 @@
+direction: right
+
+Core_Engine: {
+  label: "Mnemonic Core (Rust Daemon: mnmd)"
+  shape: rectangle
+
+  RPC: "JSON-RPC (Unix Socket)"
+  Ranker: "Context Ranker"
+  Packer: "Pack Generator"
+  Security: "Sensitive Filter"
+  DB: "SQLite (WAL/FTS5)" { shape: cylinder }
+
+  RPC -> Security: "ingest"
+  Security -> DB: "safe/masked/blocked write"
+  RPC -> Ranker: "rankContext"
+  RPC -> Packer: "generatePack"
+  Ranker -> DB: "query + score"
+  Packer -> DB: "read memories/events"
+}
+
+Interface: {
+  label: "Interface Layer"
+
+  CLI: {
+    label: "mnm CLI"
+  }
+
+  Desktop_App: {
+    label: "macOS App (Swift)"
+    Observer: "Accessibility/Event Monitor"
+    AppShell: "Menu Bar / Hotkey / Daemon Supervisor"
+    UI: "WebView (TS/React)"
+  }
+}
+
+Clipboard: "System Clipboard"
+PI_Agents: {
+  label: "PI Agents (Future)"
+  style: { stroke-dash: 5 }
+}
+
+Interface.Desktop_App.Observer -> Core_Engine.RPC: "1. events.ingest"
+Interface.CLI -> Core_Engine.RPC: "1. manual log/query"
+Interface.Desktop_App.UI -> Core_Engine.RPC: "2. rank/pack request"
+Core_Engine.RPC -> Core_Engine.DB: "3. atomic write/read"
+Core_Engine.Ranker -> Interface.Desktop_App.UI: "4. scored cards"
+Interface.Desktop_App.UI -> Clipboard: "5. one-click inject"
+Core_Engine.RPC -> PI_Agents: "Long-term Memory API (future)"
+
